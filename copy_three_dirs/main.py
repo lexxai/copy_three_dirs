@@ -17,15 +17,14 @@ from multiprocessing import cpu_count
 # from tqdm.asyncio import tqdm
 
 
-def copy_file(input1_files, files2, output_path, error_files):
-    file_src = input1_files.get(files2.stem)
+def copy_file(file_src, output_path, error_files):
     if file_src:
         try:
             copy(file_src, output_path)
-            logger.debug(f"copied: {files2.name}")
+            logger.debug(f"copied: {file_src.name}")
         except OSError:
-            error_files.append(files2.name)
-            logger.error(f"error copy: {files2.name}")
+            error_files.append(file_src.name)
+            logger.error(f"error copy: {file_src.name}")
 
 
 async def main_async(args):
@@ -37,23 +36,34 @@ async def main_async(args):
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
     input2_files = list(input2_path.glob("*.*"))
+
     output_path.mkdir(exist_ok=True, parents=True)
+    copy_list = []
+    for files2 in input2_files:
+        file_src = input1_files.get(files2.stem)
+        if file_src:
+            copy_list.append(file_src)
+    print(
+        f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
+    )
+    print(
+        f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
+    )
+    print(f"Common files : {len(copy_list)}")
 
     error_files = []
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor(cpu_count() * 2) as pool:
         futures = [
-            loop.run_in_executor(
-                pool, copy_file, input1_files, files2, output_path, error_files
-            )
-            for files2 in input2_files
+            loop.run_in_executor(pool, copy_file, file_src, output_path, error_files)
+            for file_src in copy_list
         ]
         with logging_redirect_tqdm():
             pbar = tqdm(asyncio.as_completed(futures), total=len(futures))
             [await t for t in pbar]
 
-    # if error_files:
-    #     print(f"Error files: {error_files}")
+    if error_files:
+        print(f"Error files: {error_files}")
 
 
 logger: logging

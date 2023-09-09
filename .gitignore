@@ -1,0 +1,5 @@
+/pyinstall/
+.*/
+tests/
+*.lock
+/versionfile.txt

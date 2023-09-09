@@ -1,0 +1,34 @@
+
+[tool.poetry]
+name = "copy_three_dirs"
+version = "0.1.0"
+description = "copy_three_dirs"
+authors = ["Xuno"]
+readme = "README.md"
+
+[tool.poetry.scripts]
+three-dirs = "copy_three_dirs.main:main"
+
+
+[tool.poetry.dependencies]
+python = "^3.11"
+progressbar2 = "^4.2.0"
+rich = "^13.5.2"
+imutils = "^0.5.4"
+pefile = "^2023.2.7"
+importlib-metadata = { version = "^1.0.0", python = "<3.8" }
+tqdm = "^4.66.1"
+
+
+[tool.poetry.group.dev.dependencies]
+pyinstaller = { version = "^5.13.1", python = ">=3.11,<3.13" }
+pyinstaller-versionfile = "^2.1.1"
+build = "^0.10.0"
+
+[build-system]
+requires = ["poetry-core"]
+build-backend = "poetry.core.masonry.api"
+
+[build-system-s]
+requires = ["setuptools >= 65.0.0"]
+build-backend = "setuptools.build_meta"

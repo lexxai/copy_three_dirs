@@ -51,9 +51,18 @@ def app_arg():
         version=get_version(),
         help="show version of app",
     )
-    ap.add_argument("--input1", help="Directory for input1 (source list)", required=True)
-    ap.add_argument("--input2", help="Directory for input2 (compare list)", required=True)
+    ap.add_argument(
+        "--input1", help="Directory for input1 (source list)", required=True
+    )
+    ap.add_argument(
+        "--input2", help="Directory for input2 (compare list)", required=True
+    )
     ap.add_argument("--output", help="Directory for output", default="output")
+    ap.add_argument(
+        "--verbose",
+        help="verbose output",
+        action="store_true",
+    )
     args = vars(ap.parse_args())
     # print(f"{args=}")
     return args

@@ -1,5 +1,9 @@
 from pathlib import Path
-from parse_args import app_arg
+
+try:
+    from copy_three_dirs.parse_args import app_arg
+except ImportError:
+    from parse_args import app_arg
 from shutil import copy
 import asyncio
 import time
@@ -18,13 +22,12 @@ def copy_file(input1_files, files2, output_path, error_files):
     if file_src:
         try:
             copy(file_src, output_path)
-            logger.info(f"copied: {files2.name}")
+            logger.debug(f"copied: {files2.name}")
         except OSError:
             error_files.append(files2.name)
 
 
-async def main_async():
-    args = app_arg()
+async def main_async(args):
     # print(args)
     input1_path = Path(args["input1"])
     input2_path = Path(args["input2"])
@@ -52,15 +55,19 @@ async def main_async():
     #     print(f"Error files: {error_files}")
 
 
+logger: logging
+
+
 def main():
     global logger
+    args = app_arg()
     logging.basicConfig(
-        level=logging.INFO,
+        level=logging.DEBUG if args.get("verbose") else logging.INFO,
         # format="%(asctime)s [ %(threadName)s ] < %(filename)s:%(lineno)d > %(message)s",
         format="%(asctime)s [ %(threadName)s ]  %(message)s",
     )
     logger = logging.getLogger(__name__)
-    asyncio.run(main_async())
+    asyncio.run(main_async(args))
 
 
 if __name__ == "__main__":

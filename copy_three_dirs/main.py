@@ -25,6 +25,7 @@ def copy_file(input1_files, files2, output_path, error_files):
             logger.debug(f"copied: {files2.name}")
         except OSError:
             error_files.append(files2.name)
+            logger.error(f"error copy: {files2.name}")
 
 
 async def main_async(args):

@@ -49,11 +49,12 @@ async def main_async(args):
     print(
         f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
     )
-    print(f"Common files : {len(copy_list)}")
 
-    # error_files = []
+    max_threads = cpu_count() * 2 + 2
+    print(f"Common files : {len(copy_list)}. Use copy with max threads: {max_threads}")
+
     loop = asyncio.get_running_loop()
-    with ThreadPoolExecutor(cpu_count() * 2) as pool:
+    with ThreadPoolExecutor(max_threads) as pool:
         futures = [
             loop.run_in_executor(pool, copy_file, file_src, output_path)
             for file_src in copy_list

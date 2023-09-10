@@ -3,3 +3,5 @@
 tests/
 *.lock
 /versionfile.txt
+**/*.pyc
+**/__pycache__/*

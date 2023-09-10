@@ -79,6 +79,7 @@ async def main_async(args):
             print(f"\nError copy files ({len(error_files)}): {error_files}")
 
     if not_found_list:
+        notfound_path.mkdir(exist_ok=True, parents=True)
         logger.info(f"Copy notfound files to {notfound_path.name}")
         error_files = await pool_copy_files(not_found_list, notfound_path)
         if error_files:

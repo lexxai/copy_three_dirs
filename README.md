@@ -10,4 +10,5 @@ options:
   --input1 INPUT1  Directory for input1 (source list)
   --input2 INPUT2  Directory for input2 (compare list)
   --output OUTPUT  Directory for output, default 'output'
+  --notfound NOTFOUND  Directory for notfound, default 'notfound'
   --verbose        verbose output

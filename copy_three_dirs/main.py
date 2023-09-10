@@ -1,27 +1,29 @@
-from pathlib import Path
+# from pathlib import Path
+from aiopath import AsyncPath
+from aioshutil import copyfile
 
 try:
     from copy_three_dirs.parse_args import app_arg
 except ImportError:
     from parse_args import app_arg
-from shutil import copy
+# from shutil import copy
 import asyncio
-import time
-import random
+
+# import time
+# import random
 from concurrent.futures import ThreadPoolExecutor
 import logging
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
 from multiprocessing import cpu_count
 
-# from tqdm.asyncio import tqdm
 
-
-def copy_file(file_src, output_path):
+async def copy_file(file_src: AsyncPath, output_path: AsyncPath) -> str | None:
     if file_src:
         try:
-            copy(file_src, output_path)
-            logger.debug(f"copied: {file_src.name}")
+            if await file_src.is_file():
+                await copyfile(file_src, output_path)
+                logger.debug(f"copied: {file_src.name}")
         except OSError:
             logger.error(f"error copy: {file_src.name}")
             return file_src.name
@@ -29,15 +31,15 @@ def copy_file(file_src, output_path):
 
 async def main_async(args):
     # print(args)
-    input1_path = Path(args["input1"])
-    input2_path = Path(args["input2"])
-    output_path = Path(args["output"])
+    input1_path = AsyncPath(args["input1"])
+    input2_path = AsyncPath(args["input2"])
+    output_path = AsyncPath(args["output"])
 
-    input1_files = {i.stem: i for i in input1_path.glob("*.*")}
+    input1_files = {i.stem: i for i in await input1_path.glob("*.*")}
     # print(input1_files)
-    input2_files = list(input2_path.glob("*.*"))
+    input2_files = list(await input2_path.glob("*.*"))
 
-    output_path.mkdir(exist_ok=True, parents=True)
+    await output_path.mkdir(exist_ok=True, parents=True)
     copy_list = []
     for files2 in input2_files:
         file_src = input1_files.get(files2.stem)

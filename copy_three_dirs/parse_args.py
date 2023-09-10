@@ -57,7 +57,14 @@ def app_arg():
     ap.add_argument(
         "--input2", help="Directory for input2 (compare list)", required=True
     )
-    ap.add_argument("--output", help="Directory for output", default="output")
+    ap.add_argument(
+        "--output", help="Directory for output, default 'output'", default="output"
+    )
+    ap.add_argument(
+        "--notfound",
+        help="Directory for notfound, default 'notfound'",
+        default="notfound",
+    )
     ap.add_argument(
         "--verbose",
         help="verbose output",

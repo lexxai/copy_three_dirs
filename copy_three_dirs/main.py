@@ -27,31 +27,11 @@ def copy_file(file_src, output_path):
             return file_src.name
 
 
-async def main_async(args):
-    # print(args)
-    input1_path = Path(args["input1"])
-    input2_path = Path(args["input2"])
-    output_path = Path(args["output"])
-
-    input1_files = {i.stem: i for i in input1_path.glob("*.*")}
-    # print(input1_files)
-    input2_files = list(input2_path.glob("*.*"))
-
-    output_path.mkdir(exist_ok=True, parents=True)
-    copy_list = []
-    for files2 in input2_files:
-        file_src = input1_files.get(files2.stem)
-        if file_src:
-            copy_list.append(file_src)
-    print(
-        f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
-    )
-    print(
-        f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
-    )
-
+async def pool_copy_files(copy_list: list[Path], output_path: Path) -> list[Path]:
     max_threads = cpu_count() * 2 + 2
-    print(f"Common files : {len(copy_list)}. Use copy with max threads: {max_threads}")
+    logger.info(
+        f"Thread Copy files : {len(copy_list)}. Use copy with max threads: {max_threads}"
+    )
 
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor(max_threads) as pool:
@@ -63,8 +43,46 @@ async def main_async(args):
             pbar = tqdm(asyncio.as_completed(futures), total=len(futures))
             error_files: list = [await t for t in pbar]
     error_files = list(filter(lambda t: t is not None, error_files))
-    if error_files:
-        print(f"\nError copy files ({len(error_files)}): {error_files}")
+    return error_files
+
+
+async def main_async(args):
+    # print(args)
+    input1_path = Path(args["input1"])
+    input2_path = Path(args["input2"])
+    output_path = Path(args["output"])
+    notfound_path = Path(args["notfound_path"])
+
+    input1_files = {i.stem: i for i in input1_path.glob("*.*")}
+    # print(input1_files)
+    input2_files = list(input2_path.glob("*.*"))
+
+    output_path.mkdir(exist_ok=True, parents=True)
+    copy_list = []
+    not_found_list = []
+    for files2 in input2_files:
+        file_src = input1_files.get(files2.stem)
+        if file_src:
+            copy_list.append(file_src)
+        else:
+            not_found_list.append((file_src))
+    print(
+        f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
+    )
+    print(
+        f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
+    )
+    logger.info(f"Copy only common files by name to {output_path.name}")
+    if copy_list:
+        error_files = await pool_copy_files(copy_list, output_path)
+        if error_files:
+            print(f"\nError copy files ({len(error_files)}): {error_files}")
+
+    if not_found_list:
+        logger.info(f"Copy notfound files to {notfound_path.name}")
+        error_files = await pool_copy_files(not_found_list, notfound_path)
+        if error_files:
+            print(f"\nError copy files ({len(error_files)}): {error_files}")
 
 
 logger: logging

@@ -51,7 +51,7 @@ async def main_async(args):
     input1_path = Path(args["input1"])
     input2_path = Path(args["input2"])
     output_path = Path(args["output"])
-    notfound_path = Path(args["notfound_path"])
+    notfound_path = Path(args["notfound"])
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
@@ -59,20 +59,24 @@ async def main_async(args):
 
     output_path.mkdir(exist_ok=True, parents=True)
     copy_list = []
-    not_found_list = []
+    # not_found_list = []
     for files2 in input2_files:
         file_src = input1_files.get(files2.stem)
         if file_src:
             copy_list.append(file_src)
-        else:
-            not_found_list.append((file_src))
+
+    not_found_dict = input1_files.copy()
+    for copy_item in copy_list:
+        del not_found_dict[copy_item.stem]
+    not_found_list: list[Path] = list(not_found_dict.values())
+
     print(
         f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
     )
     print(
         f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
     )
-    logger.info(f"Copy only common files by name to {output_path.name}")
+    logger.info(f"Copy only common files by name to '{output_path.name}' folder")
     if copy_list:
         error_files = await pool_copy_files(copy_list, output_path)
         if error_files:
@@ -80,7 +84,7 @@ async def main_async(args):
 
     if not_found_list:
         notfound_path.mkdir(exist_ok=True, parents=True)
-        logger.info(f"Copy notfound files to {notfound_path.name}")
+        logger.info(f"Copy notfound files to '{notfound_path.name}' folder")
         error_files = await pool_copy_files(not_found_list, notfound_path)
         if error_files:
             print(f"\nError copy files ({len(error_files)}): {error_files}")

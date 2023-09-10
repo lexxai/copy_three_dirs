@@ -17,14 +17,14 @@ from multiprocessing import cpu_count
 # from tqdm.asyncio import tqdm
 
 
-def copy_file(file_src, output_path, error_files):
+def copy_file(file_src, output_path):
     if file_src:
         try:
             copy(file_src, output_path)
             logger.debug(f"copied: {file_src.name}")
         except OSError:
-            error_files.append(file_src.name)
             logger.error(f"error copy: {file_src.name}")
+            return file_src.name
 
 
 async def main_async(args):
@@ -51,19 +51,19 @@ async def main_async(args):
     )
     print(f"Common files : {len(copy_list)}")
 
-    error_files = []
+    # error_files = []
     loop = asyncio.get_running_loop()
     with ThreadPoolExecutor(cpu_count() * 2) as pool:
         futures = [
-            loop.run_in_executor(pool, copy_file, file_src, output_path, error_files)
+            loop.run_in_executor(pool, copy_file, file_src, output_path)
             for file_src in copy_list
         ]
         with logging_redirect_tqdm():
             pbar = tqdm(asyncio.as_completed(futures), total=len(futures))
-            [await t for t in pbar]
-
+            error_files: list = [await t for t in pbar]
+    error_files = list(filter(lambda t: t is not None, error_files))
     if error_files:
-        print(f"Error files: {error_files}")
+        print(f"\nError copy files ({len(error_files)}): {error_files}")
 
 
 logger: logging

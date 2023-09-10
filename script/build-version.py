@@ -29,8 +29,8 @@ else:
         company_name="lexxai",
         file_description="copy_three_dirs",
         internal_name="copy_three_dirs",
-        legal_copyright="https://github.com/Xuno",
+        legal_copyright="https://github.com/lexxai",
         original_filename="copy_three_dirs.exe",
-        product_name="ai_split_ocr",
+        product_name="copy_three_dirs",
     )
     print(f"Done: versionfile.txt in parent folder. version='{ver}.0'")

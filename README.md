@@ -78,5 +78,36 @@ Join to Joined   : 100%|██████████| 38/38 [00:02<00:00, 13.2
 python copy_three_dirs\main.py  --work tests --input1 INPUT_1 --input2 INPUT_2 --join_only 
 2023-09-11 18:32:13,785 [ MainThread ]  Processes (4) of Join files : 38.
 Join to joined   : 100%|██████████| 38/38 [00:01<00:00, 19.42it/s]
+```
 
+### join mode CPU
+``` [--join_mode {one_core,future_core,future_thread,future_core_async}]```
+
+#### future_thread
+```
+ --input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode future_thread
+2023-09-12 00:01:50,040 [ MainThread ]  Threads (10) of Join files : 38.
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 31.16it/s]
+```
+
+#### future_core
+```
+--input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode future_core  
+2023-09-12 00:06:06,790 [ MainThread ]  Processes (4) of Join files : 38.
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 23.15it/s]
+
+```
+
+#### future_core_async
+```
+ --input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode future_core_async
+2023-09-12 00:25:28,425 [ MainThread ]  Processes (4) of Join files : 38.
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 23.25it/s]
+```
+
+#### one_core
+```
+--input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode one_core    
+2023-09-12 00:10:06,096 [ MainThread ]  One core process of Join files : 38.         
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 19.40it/s]
 ```

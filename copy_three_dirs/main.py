@@ -53,7 +53,7 @@ async def pool_copy_files(copy_list: list[Path], output_path: Path) -> list[Path
     return error_files
 
 
-async def pool_join_images(
+async def pool_join_images_async_proc(
     img1_list: list[Path], img2_dict: dict, output_path: Path, verbose=False
 ) -> list[Path]:
     max_processes = cpu_count()
@@ -115,7 +115,7 @@ def pool_join_images_proc(
 def pool_join_images_thread(
     img1_list: list[Path], img2_dict: dict, output_path: Path, verbose=False
 ) -> list[Path]:
-    max_threads = cpu_count() * 2 + 2
+    max_threads = cpu_count() * 4 + 2
     logger.info(f"Threads ({max_threads}) of Join files : {len(img1_list)}.")
 
     # loop = asyncio.get_running_loop()
@@ -144,6 +144,7 @@ def pool_join_images_thread(
 def join_images_one_core(
     copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
 ):
+    logger.info(f"One core process of Join files : {len(copy_list)}.")
     with logging_redirect_tqdm():
         for img1 in tqdm(
             copy_list, total=len(copy_list), desc=f"Join to {joined_path.name: <9}"
@@ -166,6 +167,16 @@ def join_images_future_thread(
     copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
 ):
     error_files = pool_join_images_thread(copy_list, found_dict, joined_path, verbose)
+    if error_files:
+        print(f"\nError join files ({len(error_files)}): {error_files}")
+
+
+async def join_images_future_core_async(
+    copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
+):
+    error_files = await pool_join_images_async_proc(
+        copy_list, found_dict, joined_path, verbose
+    )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
 
@@ -198,6 +209,7 @@ async def main_async(args):
 
     to_join = args.get("join")
     to_join_only = args.get("join_only")
+    join_mode = args.get("join_mode")
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
@@ -276,21 +288,36 @@ async def main_async(args):
         #     print(f"\nError join files ({len(error_files)}): {error_files}")
 
         joined_path.mkdir(exist_ok=True, parents=True)
-        # one_core
-        # join_images_one_core(copy_list, found_dict, joined_path, args.get("verbose"))
-        # future_core
-        # join_images_future_core(copy_list, found_dict, joined_path, args.get("verbose"))
-        # future_thread
-        join_images_future_thread(
-            copy_list, found_dict, joined_path, args.get("verbose")
-        )
+        match join_mode:
+            case "one_core":
+                # one_core
+                join_images_one_core(
+                    copy_list, found_dict, joined_path, args.get("verbose")
+                )
+            case "future_core":
+                # future_core
+                join_images_future_core(
+                    copy_list, found_dict, joined_path, args.get("verbose")
+                )
+            case "future_thread":
+                # future_thread
+                join_images_future_thread(
+                    copy_list, found_dict, joined_path, args.get("verbose")
+                )
+            case "future_core_async":
+                # future_thread
+                await join_images_future_core_async(
+                    copy_list, found_dict, joined_path, args.get("verbose")
+                )
+            case _:
+                logger.error("Join method unknown")
 
 
 logger: logging
 
 
 def main():
-    # freeze_support()
+    freeze_support()
     global logger
     args = app_arg()
     logging.basicConfig(

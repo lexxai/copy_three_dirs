@@ -90,7 +90,12 @@ def app_arg():
         help="to join images of 'output' and 'found' directories",
         action="store_true",
     )
-
+    ap.add_argument(
+        "--join_mode",
+        help="You can choose different processing methods for joining images, default 'future_thread'",
+        default="future_thread",
+        choices=["one_core", "future_core", "future_thread", "future_core_async"],
+    )
     ap.add_argument(
         "--join_only",
         help="to join images of 'output' and 'found' directories, without all other operations",

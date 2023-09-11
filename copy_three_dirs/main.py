@@ -84,13 +84,28 @@ async def pool_join_images(
 async def main_async(args):
     # print(args)
     work_path = Path(args["work"])
-    input1_path = work_path.joinpath(Path(args["input1"]))
-    input2_path = work_path.joinpath(Path(args["input2"]))
-    output_path = work_path.joinpath(Path(args["output"]))
-    notfound_path = work_path.joinpath(Path(args["notfound"]))
-    found_path = work_path.joinpath(Path(args["found"]))
-    joined_path = work_path.joinpath(Path(args["joined"]))
+
+    input1_path = Path(args["input1"])
+    input2_path = Path(args["input2"])
+    output_path = Path(args["output"])
+    notfound_path = Path(args["notfound"])
+    found_path = Path(args["found"])
+    joined_path = Path(args["joined"])
+    if not input1_path.is_absolute():
+        input1_path = work_path.joinpath(input1_path)
+    if not input2_path.is_absolute():
+        input2_path = work_path.joinpath(input2_path)
+    if not output_path.is_absolute():
+        output_path = work_path.joinpath(output_path)
+    if not notfound_path.is_absolute():
+        notfound_path = work_path.joinpath(notfound_path)
+    if not found_path.is_absolute():
+        found_path = work_path.joinpath(found_path)
+    if not joined_path.is_absolute():
+        joined_path = work_path.joinpath(joined_path)
+
     to_join = args.get("join")
+    to_join_only = args.get("join_only")
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
@@ -112,33 +127,34 @@ async def main_async(args):
     not_found_list: list[Path] = list(not_found_dict.values())
     found_list: list[Path] = list(found_dict.values())
 
-    print(
-        f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
-    )
-    print(
-        f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
-    )
-    logger.info(f"Copy only common files by name to '{output_path}' folder")
-    if copy_list:
-        error_files = await pool_copy_files(copy_list, output_path)
-        if error_files:
-            print(f"\nError copy files ({len(error_files)}): {error_files}")
+    if not to_join_only:
+        print(
+            f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
+        )
+        print(
+            f"The Input2 folder '{input2_path.name}' consist of files: {len(input2_files)}"
+        )
+        logger.info(f"Copy only common files by name to '{output_path}' folder")
+        if copy_list:
+            error_files = await pool_copy_files(copy_list, output_path)
+            if error_files:
+                print(f"\nError copy files ({len(error_files)}): {error_files}")
 
-    if found_list:
-        found_path.mkdir(exist_ok=True, parents=True)
-        logger.info(f"Copy found files to '{found_path}' folder")
-        error_files = await pool_copy_files(found_list, found_path)
-        if error_files:
-            print(f"\nError copy files ({len(error_files)}): {error_files}")
+        if found_list:
+            found_path.mkdir(exist_ok=True, parents=True)
+            logger.info(f"Copy found files to '{found_path}' folder")
+            error_files = await pool_copy_files(found_list, found_path)
+            if error_files:
+                print(f"\nError copy files ({len(error_files)}): {error_files}")
 
-    if not_found_list:
-        notfound_path.mkdir(exist_ok=True, parents=True)
-        logger.info(f"Copy notfound files to '{notfound_path}' folder")
-        error_files = await pool_copy_files(not_found_list, notfound_path)
-        if error_files:
-            print(f"\nError copy files ({len(error_files)}): {error_files}")
-
-    if to_join and copy_list and found_list:
+        if not_found_list:
+            notfound_path.mkdir(exist_ok=True, parents=True)
+            logger.info(f"Copy notfound files to '{notfound_path}' folder")
+            error_files = await pool_copy_files(not_found_list, notfound_path)
+            if error_files:
+                print(f"\nError copy files ({len(error_files)}): {error_files}")
+    # to join
+    if (to_join or to_join_only) and copy_list and found_list:
         joined_path.mkdir(exist_ok=True, parents=True)
         error_files = await pool_join_images(
             copy_list, found_dict, joined_path, verbose=args.get("verbose")

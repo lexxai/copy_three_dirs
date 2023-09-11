@@ -1,7 +1,7 @@
 
 [tool.poetry]
 name = "copy_three_dirs"
-version = "0.5.0"
+version = "0.5.1"
 description = "copy_three_dirs"
 authors = ["lexxai"]
 readme = "README.md"

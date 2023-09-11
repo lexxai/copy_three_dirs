@@ -53,7 +53,7 @@ def app_arg():
     )
     ap.add_argument(
         "--work",
-        help="Directory for work. Is prefix for all other directories, default ''",
+        help="Directory for work. Is prefix for all other directories that is not absolute, default ''",
         default="",
     )
     ap.add_argument(
@@ -84,6 +84,12 @@ def app_arg():
     ap.add_argument(
         "--join",
         help="to join images of 'output' and 'found' directories",
+        action="store_true",
+    )
+
+    ap.add_argument(
+        "--join_only",
+        help="to join images of 'output' and 'found' directories, without all other operations",
         action="store_true",
     )
 

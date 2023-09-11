@@ -52,12 +52,29 @@ def app_arg():
         help="show version of app",
     )
     ap.add_argument(
+        "--work",
+        help="Directory for work. Is prefix for all other directories, default ''",
+        default="",
+    )
+    ap.add_argument(
         "--input1", help="Directory for input1 (source list)", required=True
     )
     ap.add_argument(
         "--input2", help="Directory for input2 (compare list)", required=True
     )
-    ap.add_argument("--output", help="Directory for output", default="output")
+    ap.add_argument(
+        "--output", help="Directory for output, default 'output'", default="output"
+    )
+    ap.add_argument(
+        "--found",
+        help="Directory for found, default 'found'",
+        default="found",
+    )
+    ap.add_argument(
+        "--notfound",
+        help="Directory for notfound, default 'notfound'",
+        default="notfound",
+    )
     ap.add_argument(
         "--verbose",
         help="verbose output",

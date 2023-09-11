@@ -63,22 +63,22 @@ def app_arg():
         "--input2", help="Directory for input2 (compare list)", required=True
     )
     ap.add_argument(
-        "--output", help="Directory for output, default 'output'", default="output"
+        "--output", help="Directory for output, default 'Output'", default="Output"
     )
     ap.add_argument(
         "--found",
-        help="Directory for found, default 'found'",
-        default="found",
+        help="Directory for found, default 'Found'",
+        default="Found",
     )
     ap.add_argument(
         "--notfound",
-        help="Directory for notfound, default 'notfound'",
-        default="notfound",
+        help="Directory for notfound, default 'Notfound'",
+        default="Notfound",
     )
     ap.add_argument(
         "--joined",
-        help="Directory for joined images of 'output' and 'found' directories, default 'joined'",
-        default="joined",
+        help="Directory for joined images of 'output' and 'found' directories, default 'Joined'",
+        default="Joined",
     )
 
     ap.add_argument(

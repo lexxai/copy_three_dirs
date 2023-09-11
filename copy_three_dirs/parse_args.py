@@ -76,6 +76,18 @@ def app_arg():
         default="notfound",
     )
     ap.add_argument(
+        "--joined",
+        help="Directory for joined images of 'output' and 'found' directories, default 'joined'",
+        default="joined",
+    )
+
+    ap.add_argument(
+        "--join",
+        help="to join images of 'output' and 'found' directories",
+        action="store_true",
+    )
+
+    ap.add_argument(
         "--verbose",
         help="verbose output",
         action="store_true",

@@ -1,5 +1,7 @@
 from pathlib import Path
 
+from copy_three_dirs.join_images import join_images
+
 try:
     from copy_three_dirs.parse_args import app_arg
 except ImportError:
@@ -56,6 +58,8 @@ async def main_async(args):
     output_path = work_path.joinpath(Path(args["output"]))
     notfound_path = work_path.joinpath(Path(args["notfound"]))
     found_path = work_path.joinpath(Path(args["found"]))
+    joined_path = work_path.joinpath(Path(args["joined"]))
+    to_join = args.get("join")
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
@@ -63,18 +67,19 @@ async def main_async(args):
 
     output_path.mkdir(exist_ok=True, parents=True)
     copy_list = []
-    found_list = []
+    found_dict = {}
     # not_found_list = []
     for files2 in input2_files:
         file_src = input1_files.get(files2.stem)
         if file_src:
             copy_list.append(file_src)
-            found_list.append(files2)
+            found_dict[files2.stem] = files2
 
     not_found_dict = input1_files.copy()
     for copy_item in copy_list:
         del not_found_dict[copy_item.stem]
     not_found_list: list[Path] = list(not_found_dict.values())
+    found_list: list[Path] = list(found_dict.values())
 
     print(
         f"The Input1 folder '{input1_path.name}' consist of files: {len(input1_files)}"
@@ -101,6 +106,14 @@ async def main_async(args):
         error_files = await pool_copy_files(not_found_list, notfound_path)
         if error_files:
             print(f"\nError copy files ({len(error_files)}): {error_files}")
+
+    if to_join and copy_list and found_list:
+        joined_path.mkdir(exist_ok=True, parents=True)
+        for img1 in copy_list:
+            img2 = found_dict[img1.stem]
+            if img2.is_file():
+                print(f"join_images({img1}, {img2}, {joined_path})")
+                join_images(img1, img2, joined_path)
 
 
 logger: logging

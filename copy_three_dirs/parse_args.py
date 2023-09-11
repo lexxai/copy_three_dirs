@@ -71,16 +71,20 @@ def app_arg():
         default="Found",
     )
     ap.add_argument(
-        "--notfound",
-        help="Directory for notfound, default 'Notfound'",
-        default="Notfound",
+        "--notfound1",
+        help="Directory for notfound 1 (input1 diff from input2), default 'NotFound_1'",
+        default="NotFound_1",
+    )
+    ap.add_argument(
+        "--notfound2",
+        help="Directory for notfound 2 (input2 diff from input1), default 'NotFound_2'",
+        default="NotFound_2",
     )
     ap.add_argument(
         "--joined",
         help="Directory for joined images of 'output' and 'found' directories, default 'Joined'",
         default="Joined",
     )
-
     ap.add_argument(
         "--join",
         help="to join images of 'output' and 'found' directories",

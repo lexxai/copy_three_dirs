@@ -88,7 +88,8 @@ async def main_async(args):
     input1_path = Path(args["input1"])
     input2_path = Path(args["input2"])
     output_path = Path(args["output"])
-    notfound_path = Path(args["notfound"])
+    notfound1_path = Path(args["notfound1"])
+    notfound2_path = Path(args["notfound2"])
     found_path = Path(args["found"])
     joined_path = Path(args["joined"])
     if not input1_path.is_absolute():
@@ -97,8 +98,10 @@ async def main_async(args):
         input2_path = work_path.joinpath(input2_path)
     if not output_path.is_absolute():
         output_path = work_path.joinpath(output_path)
-    if not notfound_path.is_absolute():
-        notfound_path = work_path.joinpath(notfound_path)
+    if not notfound1_path.is_absolute():
+        notfound1_path = work_path.joinpath(notfound1_path)
+    if not notfound2_path.is_absolute():
+        notfound2_path = work_path.joinpath(notfound2_path)
     if not found_path.is_absolute():
         found_path = work_path.joinpath(found_path)
     if not joined_path.is_absolute():
@@ -109,23 +112,36 @@ async def main_async(args):
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
-    input2_files = list(input2_path.glob("*.*"))
+    # input2_files = list(input2_path.glob("*.*"))
+    input2_files = {i.stem: i for i in input2_path.glob("*.*")}
+
+    input1_files_set = set(input1_files.keys())
+    input2_files_set = set(input2_files.keys())
 
     output_path.mkdir(exist_ok=True, parents=True)
     copy_list = []
     found_dict = {}
-    # not_found_list = []
-    for files2 in input2_files:
-        file_src = input1_files.get(files2.stem)
+    # not_found1_list = []
+    for files2_stem, files2 in input2_files.items():
+        file_src = input1_files.get(files2_stem)
         if file_src:
             copy_list.append(file_src)
-            found_dict[files2.stem] = files2
+            found_dict[files2_stem] = files2
 
-    not_found_dict = input1_files.copy()
-    for copy_item in copy_list:
-        del not_found_dict[copy_item.stem]
-    not_found_list: list[Path] = list(not_found_dict.values())
     found_list: list[Path] = list(found_dict.values())
+
+    # not_found1_dict = input1_files.copy()
+    # for copy_item in copy_list:
+    #     item = not_found1_dict.get(copy_item.stem)
+    #     if item:
+    #         del not_found1_dict[copy_item.stem]
+    # not_found1_list: list[Path] = list(not_found1_dict.values())
+
+    not_found1_difference = input1_files_set.difference(input2_files_set)
+    not_found1_list: list[Path] = [input1_files[item] for item in not_found1_difference]
+
+    not_found2_difference = input2_files_set.difference(input1_files_set)
+    not_found2_list: list[Path] = [input2_files[item] for item in not_found2_difference]
 
     if not to_join_only:
         print(
@@ -147,12 +163,20 @@ async def main_async(args):
             if error_files:
                 print(f"\nError copy files ({len(error_files)}): {error_files}")
 
-        if not_found_list:
-            notfound_path.mkdir(exist_ok=True, parents=True)
-            logger.info(f"Copy notfound files to '{notfound_path}' folder")
-            error_files = await pool_copy_files(not_found_list, notfound_path)
+        if not_found1_list:
+            notfound1_path.mkdir(exist_ok=True, parents=True)
+            logger.info(f"Copy notfound files to '{notfound1_path}' folder")
+            error_files = await pool_copy_files(not_found1_list, notfound1_path)
             if error_files:
                 print(f"\nError copy files ({len(error_files)}): {error_files}")
+
+        if not_found2_list:
+            notfound2_path.mkdir(exist_ok=True, parents=True)
+            logger.info(f"Copy notfound files to '{notfound2_path}' folder")
+            error_files = await pool_copy_files(not_found2_list, notfound2_path)
+            if error_files:
+                print(f"\nError copy files ({len(error_files)}): {error_files}")
+
     # to join
     if (to_join or to_join_only) and copy_list and found_list:
         joined_path.mkdir(exist_ok=True, parents=True)

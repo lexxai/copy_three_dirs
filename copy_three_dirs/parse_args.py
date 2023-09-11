@@ -53,7 +53,7 @@ def app_arg():
     )
     ap.add_argument(
         "--work",
-        help="Directory for work. Is prefix for all other directories, default ''",
+        help="Directory for work. Is prefix for all other directories that is not absolute, default ''",
         default="",
     )
     ap.add_argument(
@@ -63,18 +63,36 @@ def app_arg():
         "--input2", help="Directory for input2 (compare list)", required=True
     )
     ap.add_argument(
-        "--output", help="Directory for output, default 'output'", default="output"
+        "--output", help="Directory for output, default 'Output'", default="Output"
     )
     ap.add_argument(
         "--found",
-        help="Directory for found, default 'found'",
-        default="found",
+        help="Directory for found, default 'Found'",
+        default="Found",
     )
     ap.add_argument(
         "--notfound",
-        help="Directory for notfound, default 'notfound'",
-        default="notfound",
+        help="Directory for notfound, default 'Notfound'",
+        default="Notfound",
     )
+    ap.add_argument(
+        "--joined",
+        help="Directory for joined images of 'output' and 'found' directories, default 'Joined'",
+        default="Joined",
+    )
+
+    ap.add_argument(
+        "--join",
+        help="to join images of 'output' and 'found' directories",
+        action="store_true",
+    )
+
+    ap.add_argument(
+        "--join_only",
+        help="to join images of 'output' and 'found' directories, without all other operations",
+        action="store_true",
+    )
+
     ap.add_argument(
         "--verbose",
         help="verbose output",

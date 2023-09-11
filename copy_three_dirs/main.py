@@ -11,6 +11,7 @@ import asyncio
 import time
 import random
 from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
 import logging
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -50,21 +51,30 @@ async def pool_copy_files(copy_list: list[Path], output_path: Path) -> list[Path
     return error_files
 
 
-async def pool_join_images(copy_list: list[Path], output_path: Path) -> list[Path]:
-    max_threads = cpu_count() * 2 + 2
-    logger.info(f"Thread Copy files : {len(copy_list)}.")
+async def pool_join_images(
+    img1_list: list[Path], img2_dict: dict, output_path: Path, verbose=False
+) -> list[Path]:
+    max_processes = cpu_count()
+    logger.info(f"Processes ({max_processes}) of Join files : {len(img1_list)}.")
 
     loop = asyncio.get_running_loop()
-    with ThreadPoolExecutor(max_threads) as pool:
+    with ProcessPoolExecutor(max_processes) as pool:
         futures = [
-            loop.run_in_executor(pool, copy_file, file_src, output_path)
-            for file_src in copy_list
+            loop.run_in_executor(
+                pool,
+                join_images,
+                img1_path,
+                img2_dict.get(img1_path.stem),
+                output_path,
+                verbose,
+            )
+            for img1_path in img1_list
         ]
         with logging_redirect_tqdm():
             pbar = tqdm(
                 asyncio.as_completed(futures),
                 total=len(futures),
-                desc=f"Copy to {output_path.name: <9}",
+                desc=f"Join to {output_path.name: <9}",
             )
             error_files: list = [await t for t in pbar]
     error_files = list(filter(lambda t: t is not None, error_files))
@@ -130,11 +140,17 @@ async def main_async(args):
 
     if to_join and copy_list and found_list:
         joined_path.mkdir(exist_ok=True, parents=True)
-        for img1 in copy_list:
-            img2 = found_dict[img1.stem]
-            if img2.is_file():
-                print(f"join_images({img1}, {img2}, {joined_path})")
-                join_images(img1, img2, joined_path)
+        error_files = await pool_join_images(
+            copy_list, found_dict, joined_path, verbose=args.get("verbose")
+        )
+        if error_files:
+            print(f"\nError join files ({len(error_files)}): {error_files}")
+
+        # for img1 in copy_list:
+        #     img2 = found_dict[img1.stem]
+        #     if img2.is_file():
+        #         print(f"join_images({img1}, {img2}, {joined_path})")
+        #         join_images(img1, img2, joined_path)
 
 
 logger: logging

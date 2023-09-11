@@ -317,6 +317,7 @@ logger: logging
 
 
 def main():
+    # only for pyinstall exe, need to use freeze_support
     freeze_support()
     global logger
     args = app_arg()

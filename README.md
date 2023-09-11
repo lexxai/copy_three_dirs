@@ -3,22 +3,27 @@
 ### help
 
 ```
-usage: test_cp.py  [-h] [-V] [--work WORK] --input1 INPUT1 --input2 INPUT2 [--output OUTPUT] [--found FOUND] [--notfound NOTFOUND] [--joined JOINED] [--join] [--join_only]
-                  [--verbose]
+usage: test_cp.py  [-h] [-V] [--work WORK] --input1 INPUT1 --input2 INPUT2 [--output OUTPUT] [--found FOUND] [--notfound1 NOTFOUND1] [--notfound2 NOTFOUND2] [--joined JOINED]
+                  [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--verbose]
 
 options:
-  -h, --help           show this help message and exit
-  -V, --version        show version of app
-  --work WORK          Directory for work. Is prefix for all other directories that is not absolute, default ''
-  --input1 INPUT1      Directory for input1 (source list)
-  --input2 INPUT2      Directory for input2 (compare list)
-  --output OUTPUT      Directory for output, default 'Output'
-  --found FOUND        Directory for found, default 'Found'
-  --notfound NOTFOUND  Directory for notfound, default 'Notfound'
-  --joined JOINED      Directory for joined images of 'output' and 'found' directories, default 'Joined'
-  --join               to join images of 'output' and 'found' directories
-  --join_only          to join images of 'output' and 'found' directories, without all other operations
-  --verbose            verbose output
+  -h, --help            show this help message and exit
+  -V, --version         show version of app
+  --work WORK           Directory for work. Is prefix for all other directories that is not absolute, default ''
+  --input1 INPUT1       Directory for input1 (source list)
+  --input2 INPUT2       Directory for input2 (compare list)
+  --output OUTPUT       Directory for output, default 'Output'
+  --found FOUND         Directory for found, default 'Found'
+  --notfound1 NOTFOUND1
+                        Directory for notfound 1 (input1 diff from input2), default 'NotFound_1'
+  --notfound2 NOTFOUND2
+                        Directory for notfound 2 (input2 diff from input1), default 'NotFound_2'
+  --joined JOINED       Directory for joined images of 'output' and 'found' directories, default 'Joined'
+  --join                to join images of 'output' and 'found' directories
+  --join_mode {one_core,future_core,future_thread,future_core_async}
+                        You can choose different processing methods for joining images, default 'future_thread'
+  --join_only           to join images of 'output' and 'found' directories, without all other operations
+  --verbose             verbose output
 ```
 
 
@@ -26,21 +31,21 @@ options:
 ### result 
 
 ```
-python copy_three_dirs\main.py   --work tests --input1 INPUT_1 --input2 INPUT_2 
+python copy_three_dirs\main.py --work tests --input1 INPUT_1 --input2 INPUT_2 
 The Input1 folder 'INPUT_1' consist of files: 39
-The Input2 folder 'INPUT_2' consist of files: 39
-2023-09-11 15:07:01,121 [ MainThread ]  Copy only common files by name to 'tests\output' folder
-2023-09-11 15:07:01,121 [ MainThread ]  Thread Copy files : 38.
-Copy to output   : 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 38/38 [00:00<00:00, 186.28it/s]
-2023-09-11 15:07:01,356 [ MainThread ]  Copy found files to 'tests\found' folder
-2023-09-11 15:07:01,356 [ MainThread ]  Thread Copy files : 38.
-Copy to found    : 100%|██████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 38/38 [00:00<00:00, 192.76it/s]
-2023-09-11 15:07:01,569 [ MainThread ]  Copy notfound files to 'tests\notfound' folder
-2023-09-11 15:07:01,569 [ MainThread ]  Thread Copy files : 1.
-2023-09-11 15:07:01,569 [ ThreadPoolExecutor-2_0 ]  error copy: _00001.tif                                                                                                  
-Copy to notfound : 100%|█████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████████| 1/1 [00:00<?, ?it/s]
-
-Error copy files (1): ['_00001.tif']
+The Input2 folder 'INPUT_2' consist of files: 40
+2023-09-11 19:54:14,920 [ MainThread ]  Copy only common files by name to 'tests\Output' folder
+2023-09-11 19:54:14,920 [ MainThread ]  Thread Copy files : 38.
+Copy to Output   : 100%|██████████| 38/38 [00:00<00:00, 145.39it/s]
+2023-09-11 19:54:15,195 [ MainThread ]  Copy found files to 'tests\Found' folder
+2023-09-11 19:54:15,196 [ MainThread ]  Thread Copy files : 38.
+Copy to Found    : 100%|██████████| 38/38 [00:00<00:00, 172.65it/s]
+2023-09-11 19:54:15,422 [ MainThread ]  Copy notfound files to 'tests\NotFound_1' folder
+2023-09-11 19:54:15,422 [ MainThread ]  Thread Copy files : 1.
+Copy to NotFound_1: 100%|██████████| 1/1 [00:00<00:00, 117.46it/s]
+2023-09-11 19:54:15,433 [ MainThread ]  Copy notfound files to 'tests\NotFound_2' folder
+2023-09-11 19:54:15,433 [ MainThread ]  Thread Copy files : 2.
+Copy to NotFound_2: 100%|██████████| 2/2 [00:00<00:00, 142.90it/s]
 
 ```
 ### --join
@@ -74,5 +79,36 @@ Join to Joined   : 100%|██████████| 38/38 [00:02<00:00, 13.2
 python copy_three_dirs\main.py  --work tests --input1 INPUT_1 --input2 INPUT_2 --join_only 
 2023-09-11 18:32:13,785 [ MainThread ]  Processes (4) of Join files : 38.
 Join to joined   : 100%|██████████| 38/38 [00:01<00:00, 19.42it/s]
+```
 
+### join mode CPU
+``` [--join_mode {one_core,future_core,future_thread,future_core_async}]```
+
+#### future_thread
+```
+ --input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode future_thread
+2023-09-12 00:01:50,040 [ MainThread ]  Threads (10) of Join files : 38.
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 31.16it/s]
+```
+
+#### future_core
+```
+--input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode future_core  
+2023-09-12 00:06:06,790 [ MainThread ]  Processes (4) of Join files : 38.
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 23.15it/s]
+
+```
+
+#### future_core_async
+```
+ --input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode future_core_async
+2023-09-12 00:25:28,425 [ MainThread ]  Processes (4) of Join files : 38.
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 23.25it/s]
+```
+
+#### one_core
+```
+--input1 INPUT_1 --input2 INPUT_2 --join_only --join_mode one_core    
+2023-09-12 00:10:06,096 [ MainThread ]  One core process of Join files : 38.         
+Join to Joined   : 100%|██████████| 38/38 [00:01<00:00, 19.40it/s]
 ```

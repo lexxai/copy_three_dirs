@@ -1,9 +1,18 @@
 from pathlib import Path
+import logging
 
 from PIL import Image
 
+extensions = Image.registered_extensions()
+supported_extensions = {ex for ex, f in extensions.items() if f in Image.OPEN}
+
 
 def join_images(img1_path: Path, img2_path: Path, img_destination_path: Path):
+    if img1_path.suffix not in supported_extensions:
+        # print(supported_extensions, type(supported_extensions))
+        logger: logging = logging.getLogger(__name__)
+        logger.error(f"not supported_extensions for {img1_path}")
+        return img1_path
     # Read the two images
     image1 = Image.open(img1_path)
     # image1.show()
@@ -19,11 +28,22 @@ def join_images(img1_path: Path, img2_path: Path, img_destination_path: Path):
     new_image.paste(image1, (0, 0))
     new_image.paste(image2, (image1_size[0], 0))
     save_path = img_destination_path.joinpath(img1_path.with_suffix(".jpg").name)
-    new_image.save(save_path, "JPEG")
+    try:
+        new_image.save(save_path, "JPEG")
+    except OSError:
+        logger: logging = logging.getLogger(__name__)
+        logger.error(f"error saving the file: {save_path}")
+        return save_path
     # new_image.show()
 
 
 if __name__ == "__main__":
+    logging.basicConfig(
+        level=logging.INFO,
+        # format="%(asctime)s [ %(threadName)s ] < %(filename)s:%(lineno)d > %(message)s",
+        format="%(asctime)s [ %(threadName)s ]  %(message)s",
+    )
+    logger = logging.getLogger(__name__)
     image1_path = Path("../tests/input_1/005965323-23.tif")
     image2_path = Path("../tests/input_2/005682407-23.tif")
     destination_path = Path("../tests/join_images")

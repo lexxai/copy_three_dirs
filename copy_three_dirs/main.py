@@ -50,6 +50,27 @@ async def pool_copy_files(copy_list: list[Path], output_path: Path) -> list[Path
     return error_files
 
 
+async def pool_join_images(copy_list: list[Path], output_path: Path) -> list[Path]:
+    max_threads = cpu_count() * 2 + 2
+    logger.info(f"Thread Copy files : {len(copy_list)}.")
+
+    loop = asyncio.get_running_loop()
+    with ThreadPoolExecutor(max_threads) as pool:
+        futures = [
+            loop.run_in_executor(pool, copy_file, file_src, output_path)
+            for file_src in copy_list
+        ]
+        with logging_redirect_tqdm():
+            pbar = tqdm(
+                asyncio.as_completed(futures),
+                total=len(futures),
+                desc=f"Copy to {output_path.name: <9}",
+            )
+            error_files: list = [await t for t in pbar]
+    error_files = list(filter(lambda t: t is not None, error_files))
+    return error_files
+
+
 async def main_async(args):
     # print(args)
     work_path = Path(args["work"])

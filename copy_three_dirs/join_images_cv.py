@@ -42,7 +42,7 @@ def join_images(
     image2_size = image2.shape
 
     if image1_size != image2_size:
-        image2 = cv2.resize(image2, image1_size[:2])
+        image2 = cv2.resize(image2, (image1_size[1], image1_size[0]))
 
     vis = np.concatenate((image1, image2), axis=1)
 
@@ -74,7 +74,7 @@ if __name__ == "__main__":
     )
     logger = logging.getLogger(__name__)
     image1_path = Path("../tests/input_1/005965323-23.tif")
-    image2_path = Path("../tests/input_2/005682407-23.tif")
+    image2_path = Path("../tests/input_2/005965323-23.tif")
     destination_path = Path("../tests/join_images")
     destination_path.mkdir(exist_ok=True, parents=True)
-    join_images(image1_path, image2_path, destination_path)
+    join_images(image1_path, image2_path, destination_path, debug=True)

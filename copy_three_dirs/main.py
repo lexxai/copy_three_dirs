@@ -1,27 +1,28 @@
+import logging
 from pathlib import Path
+from shutil import copy
+import asyncio
+from multiprocessing import cpu_count
+from multiprocessing import freeze_support
+import concurrent.futures
+from concurrent.futures import ThreadPoolExecutor
+from concurrent.futures import ProcessPoolExecutor
+
+from tqdm import tqdm
+from tqdm.contrib.logging import logging_redirect_tqdm
 
 try:
     from copy_three_dirs.parse_args import app_arg
     from copy_three_dirs.export_data import export_to_csv
-    from copy_three_dirs.join_images_cv import join_images
+
+    # from copy_three_dirs.join_images_cv import join_images
+    from copy_three_dirs.join_images_pil import join_images
 except ImportError:
     from parse_args import app_arg
     from export_data import export_to_csv
-    from join_images_cv import join_images
-from shutil import copy
-import asyncio
-import time
-import random
-import concurrent.futures
-from concurrent.futures import ThreadPoolExecutor
-from concurrent.futures import ProcessPoolExecutor
-from multiprocessing import freeze_support
-import logging
-from tqdm import tqdm
-from tqdm.contrib.logging import logging_redirect_tqdm
-from multiprocessing import cpu_count
 
-# from tqdm.asyncio import tqdm
+    # from join_images_cv import join_images
+    from join_images_pil import join_images
 
 
 def copy_file(file_src, output_path):

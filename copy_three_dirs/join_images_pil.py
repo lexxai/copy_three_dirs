@@ -10,6 +10,8 @@ supported_extensions = {ex for ex, f in extensions.items() if f in Image.OPEN}
 
 logger: logging
 
+print("Pillow lib")
+
 
 def setup_logger(verbose):
     global logger

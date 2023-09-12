@@ -1,6 +1,6 @@
 from pathlib import Path
 
-from copy_three_dirs.join_images import join_images
+from copy_three_dirs.join_images_cv import join_images
 
 try:
     from copy_three_dirs.parse_args import app_arg

@@ -3,8 +3,9 @@
 ### help
 
 ```
-usage: test_cp.py  [-h] [-V] [--work WORK] --input1 INPUT1 --input2 INPUT2 [--output OUTPUT] [--found FOUND] [--notfound1 NOTFOUND1] [--notfound2 NOTFOUND2] [--joined JOINED]
-                  [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--verbose]
+python copy_three_dirs\main.py -h
+usage: [-h] [-V] [--work WORK] --input1 INPUT1 --input2 INPUT2 [--output OUTPUT] [--csv CSV] [--found FOUND] [--notfound1 NOTFOUND1] [--notfound2 NOTFOUND2]
+                  [--joined JOINED] [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--verbose]
 
 options:
   -h, --help            show this help message and exit
@@ -13,6 +14,7 @@ options:
   --input1 INPUT1       Directory for input1 (source list)
   --input2 INPUT2       Directory for input2 (compare list)
   --output OUTPUT       Directory for output, default 'Output'
+  --csv CSV             Directory for csv, default 'csv'
   --found FOUND         Directory for found, default 'Found'
   --notfound1 NOTFOUND1
                         Directory for notfound 1 (input1 diff from input2), default 'NotFound_1'
@@ -24,6 +26,7 @@ options:
                         You can choose different processing methods for joining images, default 'future_thread'
   --join_only           to join images of 'output' and 'found' directories, without all other operations
   --verbose             verbose output
+
 ```
 
 

@@ -65,6 +65,7 @@ def app_arg():
     ap.add_argument(
         "--output", help="Directory for output, default 'Output'", default="Output"
     )
+    ap.add_argument("--csv", help="Directory for csv, default 'csv'", default="csv")
     ap.add_argument(
         "--found",
         help="Directory for found, default 'Found'",

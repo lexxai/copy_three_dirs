@@ -1,5 +1,6 @@
 from pathlib import Path
 
+from copy_three_dirs import export_data
 from copy_three_dirs.join_images_cv import join_images
 
 try:
@@ -192,6 +193,7 @@ async def main_async(args):
     notfound2_path = Path(args["notfound2"])
     found_path = Path(args["found"])
     joined_path = Path(args["joined"])
+    csv_path = Path(args["csv"])
     if not input1_path.is_absolute():
         input1_path = work_path.joinpath(input1_path)
     if not input2_path.is_absolute():
@@ -206,7 +208,8 @@ async def main_async(args):
         found_path = work_path.joinpath(found_path)
     if not joined_path.is_absolute():
         joined_path = work_path.joinpath(joined_path)
-
+    if not csv_path.is_absolute():
+        csv_path = work_path.joinpath(csv_path)
     to_join = args.get("join")
     to_join_only = args.get("join_only")
     join_mode = args.get("join_mode")
@@ -270,6 +273,9 @@ async def main_async(args):
             error_files = await pool_copy_files(not_found1_list, notfound1_path)
             if error_files:
                 print(f"\nError copy files ({len(error_files)}): {error_files}")
+            export_data.export_to_csv(
+                not_found1_list, csv_path.joinpath("not_found1.csv")
+            )
 
         if not_found2_list:
             notfound2_path.mkdir(exist_ok=True, parents=True)
@@ -277,7 +283,9 @@ async def main_async(args):
             error_files = await pool_copy_files(not_found2_list, notfound2_path)
             if error_files:
                 print(f"\nError copy files ({len(error_files)}): {error_files}")
-
+            export_data.export_to_csv(
+                not_found2_list, csv_path.joinpath("not_found2.csv")
+            )
     # to join
     if (to_join or to_join_only) and copy_list and found_list:
         # joined_path.mkdir(exist_ok=True, parents=True)

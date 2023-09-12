@@ -5,7 +5,7 @@
 ```
 python copy_three_dirs\main.py -h
 usage: [-h] [-V] [--work WORK] --input1 INPUT1 --input2 INPUT2 [--output OUTPUT] [--csv CSV] [--found FOUND] [--notfound1 NOTFOUND1] [--notfound2 NOTFOUND2]
-                  [--joined JOINED] [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--verbose]
+               [--joined JOINED] [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--join_tasks JOIN_TASKS] [--verbose]
 
 options:
   -h, --help            show this help message and exit
@@ -25,6 +25,8 @@ options:
   --join_mode {one_core,future_core,future_thread,future_core_async}
                         You can choose different processing methods for joining images, default 'future_thread'
   --join_only           to join images of 'output' and 'found' directories, without all other operations
+  --join_tasks JOIN_TASKS
+                        Set custom number of maximum parallel tasks, 0 - automatic, default '0'
   --verbose             verbose output
 
 ```

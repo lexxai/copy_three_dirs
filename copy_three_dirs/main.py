@@ -1,12 +1,13 @@
 from pathlib import Path
 
-from copy_three_dirs import export_data
-from copy_three_dirs.join_images_cv import join_images
-
 try:
     from copy_three_dirs.parse_args import app_arg
+    from copy_three_dirs.export_data import export_to_csv
+    from copy_three_dirs.join_images_cv import join_images
 except ImportError:
     from parse_args import app_arg
+    from export_data import export_to_csv
+    from join_images_cv import join_images
 from shutil import copy
 import asyncio
 import time
@@ -33,8 +34,13 @@ def copy_file(file_src, output_path):
             return file_src.name
 
 
-async def pool_copy_files(copy_list: list[Path], output_path: Path) -> list[Path]:
-    max_threads = cpu_count() * 2 + 2
+async def pool_copy_files(
+    copy_list: list[Path],
+    output_path: Path,
+    verbose=False,
+    join_tasks=0,
+) -> list[Path]:
+    max_threads = cpu_count() * 2 + 2 if not join_tasks else join_tasks
     logger.info(f"Thread Copy files : {len(copy_list)}.")
 
     loop = asyncio.get_running_loop()
@@ -55,9 +61,15 @@ async def pool_copy_files(copy_list: list[Path], output_path: Path) -> list[Path
 
 
 async def pool_join_images_async_proc(
-    img1_list: list[Path], img2_dict: dict, output_path: Path, verbose=False
+    img1_list: list[Path],
+    img2_dict: dict,
+    output_path: Path,
+    verbose=False,
+    join_tasks=0,
 ) -> list[Path]:
-    max_processes = cpu_count()
+    max_processes = cpu_count() if not join_tasks else join_tasks
+    if max_processes > 61:
+        max_processes = 61
     logger.info(f"Processes ({max_processes}) of Join files : {len(img1_list)}.")
 
     loop = asyncio.get_running_loop()
@@ -85,9 +97,15 @@ async def pool_join_images_async_proc(
 
 
 def pool_join_images_proc(
-    img1_list: list[Path], img2_dict: dict, output_path: Path, verbose=False
+    img1_list: list[Path],
+    img2_dict: dict,
+    output_path: Path,
+    verbose=False,
+    join_tasks=0,
 ) -> list[Path]:
-    max_processes = cpu_count()
+    max_processes = cpu_count() if not join_tasks else join_tasks
+    if max_processes > 61:
+        max_processes = 61
     logger.info(f"Processes ({max_processes}) of Join files : {len(img1_list)}.")
 
     # loop = asyncio.get_running_loop()
@@ -114,9 +132,13 @@ def pool_join_images_proc(
 
 
 def pool_join_images_thread(
-    img1_list: list[Path], img2_dict: dict, output_path: Path, verbose=False
+    img1_list: list[Path],
+    img2_dict: dict,
+    output_path: Path,
+    verbose=False,
+    join_tasks=0,
 ) -> list[Path]:
-    max_threads = cpu_count() * 4 + 2
+    max_threads = cpu_count() * 4 + 2 if not join_tasks else join_tasks
     logger.info(f"Threads ({max_threads}) of Join files : {len(img1_list)}.")
 
     # loop = asyncio.get_running_loop()
@@ -143,7 +165,11 @@ def pool_join_images_thread(
 
 
 def join_images_one_core(
-    copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
+    copy_list: list[Path],
+    found_dict: dict,
+    joined_path: Path,
+    verbose: bool = False,
+    join_tasks=0,
 ):
     logger.info(f"One core process of Join files : {len(copy_list)}.")
     with logging_redirect_tqdm():
@@ -157,26 +183,42 @@ def join_images_one_core(
 
 
 def join_images_future_core(
-    copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
+    copy_list: list[Path],
+    found_dict: dict,
+    joined_path: Path,
+    verbose: bool = False,
+    join_tasks=0,
 ):
-    error_files = pool_join_images_proc(copy_list, found_dict, joined_path, verbose)
+    error_files = pool_join_images_proc(
+        copy_list, found_dict, joined_path, verbose, join_tasks
+    )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
 
 
 def join_images_future_thread(
-    copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
+    copy_list: list[Path],
+    found_dict: dict,
+    joined_path: Path,
+    verbose: bool = False,
+    join_tasks=0,
 ):
-    error_files = pool_join_images_thread(copy_list, found_dict, joined_path, verbose)
+    error_files = pool_join_images_thread(
+        copy_list, found_dict, joined_path, verbose, join_tasks
+    )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
 
 
 async def join_images_future_core_async(
-    copy_list: list[Path], found_dict: dict, joined_path: Path, verbose: bool = False
+    copy_list: list[Path],
+    found_dict: dict,
+    joined_path: Path,
+    verbose: bool = False,
+    join_tasks=0,
 ):
     error_files = await pool_join_images_async_proc(
-        copy_list, found_dict, joined_path, verbose
+        copy_list, found_dict, joined_path, verbose, join_tasks
     )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
@@ -213,6 +255,7 @@ async def main_async(args):
     to_join = args.get("join")
     to_join_only = args.get("join_only")
     join_mode = args.get("join_mode")
+    join_tasks = args.get("join_tasks")
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
@@ -273,9 +316,7 @@ async def main_async(args):
             error_files = await pool_copy_files(not_found1_list, notfound1_path)
             if error_files:
                 print(f"\nError copy files ({len(error_files)}): {error_files}")
-            export_data.export_to_csv(
-                not_found1_list, csv_path.joinpath("not_found1.csv")
-            )
+            export_to_csv(not_found1_list, csv_path.joinpath("not_found1.csv"))
 
         if not_found2_list:
             notfound2_path.mkdir(exist_ok=True, parents=True)
@@ -283,9 +324,7 @@ async def main_async(args):
             error_files = await pool_copy_files(not_found2_list, notfound2_path)
             if error_files:
                 print(f"\nError copy files ({len(error_files)}): {error_files}")
-            export_data.export_to_csv(
-                not_found2_list, csv_path.joinpath("not_found2.csv")
-            )
+            export_to_csv(not_found2_list, csv_path.joinpath("not_found2.csv"))
     # to join
     if (to_join or to_join_only) and copy_list and found_list:
         # joined_path.mkdir(exist_ok=True, parents=True)
@@ -300,22 +339,38 @@ async def main_async(args):
             case "one_core":
                 # one_core
                 join_images_one_core(
-                    copy_list, found_dict, joined_path, args.get("verbose")
+                    copy_list,
+                    found_dict,
+                    joined_path,
+                    verbose=args.get("verbose"),
+                    join_tasks=join_tasks,
                 )
             case "future_core":
                 # future_core
                 join_images_future_core(
-                    copy_list, found_dict, joined_path, args.get("verbose")
+                    copy_list,
+                    found_dict,
+                    joined_path,
+                    verbose=args.get("verbose"),
+                    join_tasks=join_tasks,
                 )
             case "future_thread":
                 # future_thread
                 join_images_future_thread(
-                    copy_list, found_dict, joined_path, args.get("verbose")
+                    copy_list,
+                    found_dict,
+                    joined_path,
+                    verbose=args.get("verbose"),
+                    join_tasks=join_tasks,
                 )
             case "future_core_async":
                 # future_thread
                 await join_images_future_core_async(
-                    copy_list, found_dict, joined_path, args.get("verbose")
+                    copy_list,
+                    found_dict,
+                    joined_path,
+                    verbose=args.get("verbose"),
+                    join_tasks=join_tasks,
                 )
             case _:
                 logger.error("Join method unknown")

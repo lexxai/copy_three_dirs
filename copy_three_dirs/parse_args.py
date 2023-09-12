@@ -102,6 +102,12 @@ def app_arg():
         help="to join images of 'output' and 'found' directories, without all other operations",
         action="store_true",
     )
+    ap.add_argument(
+        "--join_tasks",
+        help="Set custom number of maximum parallel tasks, 0 - automatic, default '0'",
+        default=0,
+        type=int,
+    )
 
     ap.add_argument(
         "--verbose",

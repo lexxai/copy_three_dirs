@@ -179,14 +179,26 @@ def join_images_one_core(
     join_similarity=False,
 ):
     logger.info(f"One core process of Join files : {len(copy_list)}.")
+    results = []
+    args = {
+        "img1_path": None,
+        "img2_path": None,
+        "img_destination_path": joined_path,
+        "verbose": verbose,
+        "join_similarity": join_similarity,
+    }
     with logging_redirect_tqdm():
         for img1 in tqdm(
             copy_list, total=len(copy_list), desc=f"Join to {joined_path.name: <9}"
         ):
             img2 = found_dict[img1.stem]
             if img1.is_file() and img2.is_file():
+                args["img1_path"] = img1
+                args["img2_path"] = img2
                 # logger.info(f"join_images({img1}, {img2}, {joined_path})")
-                join_images(img1, img2, joined_path, join_similarity=join_similarity)
+                result = join_images(args)
+                results.append(result)
+    return results
 
 
 def join_images_future_core(
@@ -197,11 +209,10 @@ def join_images_future_core(
     join_tasks=0,
     join_similarity=False,
 ):
-    error_files = pool_join_images_proc(
+    results = pool_join_images_proc(
         copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
     )
-    if error_files:
-        print(f"\nError join files ({len(error_files)}): {error_files}")
+    return results
 
 
 def join_images_future_thread(
@@ -212,11 +223,10 @@ def join_images_future_thread(
     join_tasks=0,
     join_similarity=False,
 ):
-    error_files = pool_join_images_thread(
+    results = pool_join_images_thread(
         copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
     )
-    if error_files:
-        print(f"\nError join files ({len(error_files)}): {error_files}")
+    return results
 
 
 async def join_images_future_core_async(
@@ -346,10 +356,11 @@ async def main_async(args):
         #     print(f"\nError join files ({len(error_files)}): {error_files}")
 
         joined_path.mkdir(exist_ok=True, parents=True)
+        results = []
         match join_mode:
             case "one_core":
                 # one_core
-                join_images_one_core(
+                results = join_images_one_core(
                     copy_list,
                     found_dict,
                     joined_path,
@@ -359,7 +370,7 @@ async def main_async(args):
                 )
             case "future_core":
                 # future_core
-                join_images_future_core(
+                results = join_images_future_core(
                     copy_list,
                     found_dict,
                     joined_path,
@@ -369,7 +380,7 @@ async def main_async(args):
                 )
             case "future_thread":
                 # future_thread
-                join_images_future_thread(
+                results = join_images_future_thread(
                     copy_list,
                     found_dict,
                     joined_path,
@@ -379,7 +390,7 @@ async def main_async(args):
                 )
             case "future_core_async":
                 # future_thread
-                await join_images_future_core_async(
+                results = await join_images_future_core_async(
                     copy_list,
                     found_dict,
                     joined_path,
@@ -389,6 +400,12 @@ async def main_async(args):
                 )
             case _:
                 logger.error("Join method unknown")
+
+        # after join tasks
+        print(results)
+        error_files = list(filter(lambda t: t.get("error") is not None, results))
+        if error_files:
+            print(f"\nError join files ({len(error_files)}): {error_files}")
 
 
 logger: logging

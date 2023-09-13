@@ -15,14 +15,16 @@ try:
     from copy_three_dirs.parse_args import app_arg
     from copy_three_dirs.export_data import export_to_csv
 
-    # from copy_three_dirs.join_images_cv import join_images
-    from copy_three_dirs.join_images_pil import join_images
+    from copy_three_dirs.join_images_cv import join_images
+
+    # from copy_three_dirs.join_images_pil import join_images
 except ImportError:
     from parse_args import app_arg
     from export_data import export_to_csv
 
-    # from join_images_cv import join_images
-    from join_images_pil import join_images
+    from join_images_cv import join_images
+
+    # from join_images_pil import join_images
 
 
 def copy_file(file_src, output_path):
@@ -103,6 +105,7 @@ def pool_join_images_proc(
     output_path: Path,
     verbose=False,
     join_tasks=0,
+    join_similarity=False,
 ) -> list[Path]:
     max_processes = cpu_count() if not join_tasks else join_tasks
     if max_processes > 61:
@@ -138,31 +141,33 @@ def pool_join_images_thread(
     output_path: Path,
     verbose=False,
     join_tasks=0,
-) -> list[Path]:
+    join_similarity=False,
+) -> list[dict]:
     max_threads = cpu_count() * 4 + 2 if not join_tasks else join_tasks
     logger.info(f"Threads ({max_threads}) of Join files : {len(img1_list)}.")
-
     # loop = asyncio.get_running_loop()
+    args = {
+        "img1_path": None,
+        "img2_path": None,
+        "img_destination_path": output_path,
+        "verbose": verbose,
+        "join_similarity": join_similarity,
+    }
     with ThreadPoolExecutor(max_threads) as pool:
-        futures = [
-            pool.submit(
-                join_images,
-                img1_path,
-                img2_dict.get(img1_path.stem),
-                output_path,
-                verbose,
-            )
-            for img1_path in img1_list
-        ]
+        futures = []
+        for img1_path in img1_list:
+            args["img1_path"] = img1_path
+            args["img2_path"] = img2_dict.get(img1_path.stem)
+            futures.append(pool.submit(join_images, args))
+
         with logging_redirect_tqdm():
             pbar_future = tqdm(
                 concurrent.futures.as_completed(futures),
                 total=len(futures),
                 desc=f"Join to {output_path.name: <9}",
             )
-            error_files: list = [future.result() for future in pbar_future]
-    error_files = list(filter(lambda t: t is not None, error_files))
-    return error_files
+            results: list = [future.result() for future in pbar_future]
+    return results
 
 
 def join_images_one_core(
@@ -171,6 +176,7 @@ def join_images_one_core(
     joined_path: Path,
     verbose: bool = False,
     join_tasks=0,
+    join_similarity=False,
 ):
     logger.info(f"One core process of Join files : {len(copy_list)}.")
     with logging_redirect_tqdm():
@@ -180,7 +186,7 @@ def join_images_one_core(
             img2 = found_dict[img1.stem]
             if img1.is_file() and img2.is_file():
                 # logger.info(f"join_images({img1}, {img2}, {joined_path})")
-                join_images(img1, img2, joined_path)
+                join_images(img1, img2, joined_path, join_similarity=join_similarity)
 
 
 def join_images_future_core(
@@ -189,9 +195,10 @@ def join_images_future_core(
     joined_path: Path,
     verbose: bool = False,
     join_tasks=0,
+    join_similarity=False,
 ):
     error_files = pool_join_images_proc(
-        copy_list, found_dict, joined_path, verbose, join_tasks
+        copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
     )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
@@ -203,9 +210,10 @@ def join_images_future_thread(
     joined_path: Path,
     verbose: bool = False,
     join_tasks=0,
+    join_similarity=False,
 ):
     error_files = pool_join_images_thread(
-        copy_list, found_dict, joined_path, verbose, join_tasks
+        copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
     )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
@@ -217,9 +225,10 @@ async def join_images_future_core_async(
     joined_path: Path,
     verbose: bool = False,
     join_tasks=0,
+    join_similarity=False,
 ):
     error_files = await pool_join_images_async_proc(
-        copy_list, found_dict, joined_path, verbose, join_tasks
+        copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
     )
     if error_files:
         print(f"\nError join files ({len(error_files)}): {error_files}")
@@ -257,6 +266,7 @@ async def main_async(args):
     to_join_only = args.get("join_only")
     join_mode = args.get("join_mode")
     join_tasks = args.get("join_tasks")
+    join_similarity = args.get("join_similarity")
 
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
     # print(input1_files)
@@ -345,6 +355,7 @@ async def main_async(args):
                     joined_path,
                     verbose=args.get("verbose"),
                     join_tasks=join_tasks,
+                    join_similarity=join_similarity,
                 )
             case "future_core":
                 # future_core
@@ -354,6 +365,7 @@ async def main_async(args):
                     joined_path,
                     verbose=args.get("verbose"),
                     join_tasks=join_tasks,
+                    join_similarity=join_similarity,
                 )
             case "future_thread":
                 # future_thread
@@ -363,6 +375,7 @@ async def main_async(args):
                     joined_path,
                     verbose=args.get("verbose"),
                     join_tasks=join_tasks,
+                    join_similarity=join_similarity,
                 )
             case "future_core_async":
                 # future_thread
@@ -372,6 +385,7 @@ async def main_async(args):
                     joined_path,
                     verbose=args.get("verbose"),
                     join_tasks=join_tasks,
+                    join_similarity=join_similarity,
                 )
             case _:
                 logger.error("Join method unknown")

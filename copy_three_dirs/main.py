@@ -13,14 +13,14 @@ from tqdm.contrib.logging import logging_redirect_tqdm
 
 try:
     from copy_three_dirs.parse_args import app_arg
-    from copy_three_dirs.export_data import export_to_csv
+    from copy_three_dirs.export_data import export_to_csv, export_similarity_to_csv
 
     from copy_three_dirs.join_images_cv import join_images
 
     # from copy_three_dirs.join_images_pil import join_images
 except ImportError:
     from parse_args import app_arg
-    from export_data import export_to_csv
+    from export_data import export_to_csv, export_similarity_to_csv
 
     from join_images_cv import join_images
 
@@ -402,7 +402,8 @@ async def main_async(args):
                 logger.error("Join method unknown")
 
         # after join tasks
-        print(results)
+        if join_similarity:
+            export_similarity_to_csv(results, csv_path.joinpath("join_similarity.csv"))
         error_files = list(filter(lambda t: t.get("error") is not None, results))
         if error_files:
             print(f"\nError join files ({len(error_files)}): {error_files}")

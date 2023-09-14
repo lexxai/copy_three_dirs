@@ -1,7 +1,7 @@
 
 [tool.poetry]
 name = "copy_three_dirs"
-version = "0.9.2"
+version = "0.9.3"
 description = "copy_three_dirs (opencv)"
 authors = ["lexxai"]
 readme = "README.md"

@@ -41,7 +41,7 @@ async def pool_join_images_async_proc(
         for img1_path in img1_list:
             args["img1_path"] = img1_path
             args["img2_path"] = img2_dict.get(img1_path.stem)
-            futures.append(loop.run_in_executor(pool, join_images, args))
+            futures.append(loop.run_in_executor(pool, join_images, args.copy()))
         with logging_redirect_tqdm():
             pbar = tqdm(
                 asyncio.as_completed(futures),
@@ -74,11 +74,21 @@ def pool_join_images_proc(
         "join_similarity": join_similarity,
     }
     with ProcessPoolExecutor(max_processes) as pool:
+        # futures = [
+        #     pool.submit(
+        #         join_images,
+        #         img1_path,
+        #         img2_dict.get(img1_path.stem),
+        #         output_path,
+        #         verbose,
+        #     )
+        #     for img1_path in img1_list
+        # ]
         futures = []
         for img1_path in img1_list:
             args["img1_path"] = img1_path
             args["img2_path"] = img2_dict.get(img1_path.stem)
-            futures.append(pool.submit(join_images, args))
+            futures.append(pool.submit(join_images, args.copy()))
         with logging_redirect_tqdm():
             pbar_future = tqdm(
                 concurrent.futures.as_completed(futures),
@@ -112,7 +122,7 @@ def pool_join_images_thread(
         for img1_path in img1_list:
             args["img1_path"] = img1_path
             args["img2_path"] = img2_dict.get(img1_path.stem)
-            futures.append(pool.submit(join_images, args))
+            futures.append(pool.submit(join_images, args.copy()))
 
         with logging_redirect_tqdm():
             pbar_future = tqdm(
@@ -150,7 +160,7 @@ def join_images_one_core(
                 args["img1_path"] = img1
                 args["img2_path"] = img2
                 # logger.info(f"join_images({img1}, {img2}, {joined_path})")
-                result = join_images(args)
+                result = join_images(args.copy())
                 results.append(result)
     return results
 

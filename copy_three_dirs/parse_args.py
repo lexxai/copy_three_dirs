@@ -9,6 +9,8 @@ if sys.version_info >= (3, 8):
 else:
     from importlib_metadata import version
 
+OPENCV = True
+
 
 def get_version_pe():
     if getattr(sys, "frozen", False):
@@ -43,7 +45,8 @@ def get_version():
 
 
 def app_arg():
-    ap = argparse.ArgumentParser()
+    library_ver = "OpenCV lib" if OPENCV else "Pillow lib"
+    ap = argparse.ArgumentParser(epilog=library_ver)
     ap.add_argument(
         "-V",
         "--version",
@@ -108,11 +111,12 @@ def app_arg():
         default=0,
         type=int,
     )
-    ap.add_argument(
-        "--join_similarity",
-        help="Measure similarity of two images 0..1 and save to CSV",
-        action="store_true",
-    )
+    if OPENCV:
+        ap.add_argument(
+            "--join_similarity",
+            help="Measure similarity of two images 0..1 and save to CSV",
+            action="store_true",
+        )
     args = vars(ap.parse_args())
     # print(f"{args=}")
     return args

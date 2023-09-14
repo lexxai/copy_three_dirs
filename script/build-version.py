@@ -6,16 +6,21 @@ from pathlib import Path
 
 parser = ConfigParser()
 # read config file
-config_setup=Path("..\setup.cfg")
+description = ""
+ver = "0.0.1"
+config_setup = Path("..\setup.cfg")
 if config_setup.is_file():
     parser.read(config_setup)
     ver = parser["metadata"].get("version", "0.0.1")
+    description = parser["metadata"].get("description", "").strip('"')
+    name = parser["metadata"].get("name", "").strip('"')
 else:
-    config_setup=Path("..\pyproject.toml")
+    config_setup = Path("..\pyproject.toml")
     if config_setup.is_file():
         parser.read(config_setup)
-        ver = parser["tool.poetry"].get("version", "0.0.1")
-        ver = ver.strip('"')
+        ver = parser["tool.poetry"].get("version", "0.0.1").strip('"')
+        description = parser["tool.poetry"].get("description", "").strip('"')
+        name = parser["tool.poetry"].get("name", "").strip('"')
 
 if len(sys.argv) > 1:
     filename = Path(sys.argv[1])
@@ -27,10 +32,10 @@ else:
         output_file="..\\versionfile.txt",
         version=f"{ver}.0",
         company_name="lexxai",
-        file_description="copy_three_dirs",
-        internal_name="copy_three_dirs",
+        file_description=description,
+        internal_name=name,
         legal_copyright="https://github.com/lexxai",
-        original_filename="copy_three_dirs.exe",
-        product_name="copy_three_dirs",
+        original_filename=f"{name}_{ver}.exe",
+        product_name=name,
     )
     print(f"Done: versionfile.txt in parent folder. version='{ver}.0'")

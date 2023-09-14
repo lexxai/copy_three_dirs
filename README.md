@@ -5,7 +5,8 @@
 ```
 python copy_three_dirs\main.py -h
 usage:  [-h] [-V] [--work WORK] --input1 INPUT1 --input2 INPUT2 [--output OUTPUT] [--csv CSV] [--found FOUND] [--notfound1 NOTFOUND1] [--notfound2 NOTFOUND2]
-               [--joined JOINED] [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--join_tasks JOIN_TASKS] [--join_similarity]
+               [--joined JOINED] [--join] [--join_mode {one_core,future_core,future_thread,future_core_async}] [--join_only] [--join_tasks JOIN_TASKS] [--join_similarity]        
+               [--join_sim_method {match,sift,orb,fast}] [--verbose]
 
 options:
   -h, --help            show this help message and exit
@@ -28,6 +29,9 @@ options:
   --join_tasks JOIN_TASKS
                         Set custom number of maximum parallel tasks, 0 - automatic, default '0'
   --join_similarity     Measure similarity of two images 0..1 and save to CSV
+  --join_sim_method {match,sift,orb,fast}
+                        You can choose different methods for similarity analyze of images, default 'match'
+  --verbose             verbose output
 
 OpenCV lib
 

@@ -103,8 +103,8 @@ def similarity_measure_orb(img1, img2, debug: bool = False) -> float:
 
     # Calculate a similarity score based on the number of good matches
     similarity_score = len(good_matches) / max(len(keypoints1), len(keypoints2))
-
-    print("Similarity Score:", similarity_score)
+    if debug:
+        print("Similarity Score:", similarity_score)
     # clear unused Mat before exit
     im1 = np.zeros(0)
     im2 = np.zeros(0)

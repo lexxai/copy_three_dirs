@@ -3,6 +3,7 @@ import concurrent.futures
 from concurrent.futures import ProcessPoolExecutor, ThreadPoolExecutor
 from multiprocessing import cpu_count
 from pathlib import Path
+from typing import Callable
 
 from tqdm import tqdm
 from tqdm.contrib.logging import logging_redirect_tqdm
@@ -23,6 +24,7 @@ async def pool_join_images_async_proc(
     verbose=False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ) -> list[dict]:
     max_processes = cpu_count() if not join_tasks else join_tasks
     if max_processes > 61:
@@ -34,6 +36,7 @@ async def pool_join_images_async_proc(
         "img_destination_path": output_path,
         "verbose": verbose,
         "join_similarity": join_similarity,
+        "join_sim_method": join_sim_method,
     }
     loop = asyncio.get_running_loop()
     with ProcessPoolExecutor(max_processes) as pool:
@@ -59,6 +62,7 @@ def pool_join_images_proc(
     verbose=False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ) -> list[dict]:
     max_processes = cpu_count() if not join_tasks else join_tasks
     if max_processes > 61:
@@ -72,6 +76,7 @@ def pool_join_images_proc(
         "img_destination_path": output_path,
         "verbose": verbose,
         "join_similarity": join_similarity,
+        "join_sim_method": join_sim_method,
     }
     with ProcessPoolExecutor(max_processes) as pool:
         # futures = [
@@ -106,6 +111,7 @@ def pool_join_images_thread(
     verbose=False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ) -> list[dict]:
     max_threads = cpu_count() * 4 + 2 if not join_tasks else join_tasks
     logger.info(f"Threads ({max_threads}) of Join files : {len(img1_list)}.")
@@ -116,6 +122,7 @@ def pool_join_images_thread(
         "img_destination_path": output_path,
         "verbose": verbose,
         "join_similarity": join_similarity,
+        "join_sim_method": join_sim_method,
     }
     with ThreadPoolExecutor(max_threads) as pool:
         futures = []
@@ -141,6 +148,7 @@ def join_images_one_core(
     verbose: bool = False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ) -> list[dict]:
     logger.info(f"One core process of Join files : {len(copy_list)}.")
     results = []
@@ -150,6 +158,7 @@ def join_images_one_core(
         "img_destination_path": joined_path,
         "verbose": verbose,
         "join_similarity": join_similarity,
+        "join_sim_method": join_sim_method,
     }
     with logging_redirect_tqdm():
         for img1 in tqdm(
@@ -172,9 +181,16 @@ def join_images_future_core(
     verbose: bool = False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ):
     results = pool_join_images_proc(
-        copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
+        copy_list,
+        found_dict,
+        joined_path,
+        verbose,
+        join_tasks,
+        join_similarity,
+        join_sim_method,
     )
     return results
 
@@ -186,9 +202,16 @@ def join_images_future_thread(
     verbose: bool = False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ):
     results = pool_join_images_thread(
-        copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
+        copy_list,
+        found_dict,
+        joined_path,
+        verbose,
+        join_tasks,
+        join_similarity,
+        join_sim_method,
     )
     return results
 
@@ -200,8 +223,27 @@ async def join_images_future_core_async(
     verbose: bool = False,
     join_tasks=0,
     join_similarity=False,
+    join_sim_method: str = "match",
 ):
     results = await pool_join_images_async_proc(
-        copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
+        copy_list,
+        found_dict,
+        joined_path,
+        verbose,
+        join_tasks,
+        join_similarity,
+        join_sim_method,
     )
     return results
+
+
+join_modes: dict[str:Callable] = {
+    "one_core": join_images_one_core,
+    "future_core": join_images_future_core,
+    "future_thread": join_images_future_thread,
+    "future_core_async": join_images_future_core_async,
+}
+
+
+def get_mode(mode: str) -> Callable:
+    return join_modes.get(mode)

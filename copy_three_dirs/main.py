@@ -97,6 +97,7 @@ async def main_async(args):
     join_mode = args.get("join_mode")
     join_tasks = args.get("join_tasks")
     join_similarity = args.get("join_similarity")
+    join_sim_method = args.get("join_sim_method")
 
     # find files in source directories and build dict with keys as stem of filename
     input1_files = {i.stem: i for i in input1_path.glob("*.*")}
@@ -161,57 +162,82 @@ async def main_async(args):
             export_to_csv(not_found2_list, csv_path.joinpath("not_found2.csv"))
     # tasks of join images from directories copy_list and found_list and check similarity of them
     if (to_join or to_join_only) and copy_list and found_list:
+        if join_similarity:
+            logger.info(f"join similarity analise method: {join_sim_method}")
         joined_path.mkdir(exist_ok=True, parents=True)
         results = []
         # check what method of CPU bounding task will to use, by default will to used method 'future_thread'
-        match join_mode:
-            case "one_core":
-                # one_core
-                results = ji_tasks.join_images_one_core(
-                    copy_list,
-                    found_dict,
-                    joined_path,
-                    verbose=args.get("verbose"),
-                    join_tasks=join_tasks,
-                    join_similarity=join_similarity,
-                )
-            case "future_core":
-                # future_core
-                results = ji_tasks.join_images_future_core(
-                    copy_list,
-                    found_dict,
-                    joined_path,
-                    verbose=args.get("verbose"),
-                    join_tasks=join_tasks,
-                    join_similarity=join_similarity,
-                )
-            case "future_thread":
-                # future_thread
-                results = ji_tasks.join_images_future_thread(
-                    copy_list,
-                    found_dict,
-                    joined_path,
-                    verbose=args.get("verbose"),
-                    join_tasks=join_tasks,
-                    join_similarity=join_similarity,
-                )
-            case "future_core_async":
-                # future_thread
-                results = await ji_tasks.join_images_future_core_async(
-                    copy_list,
-                    found_dict,
-                    joined_path,
-                    verbose=args.get("verbose"),
-                    join_tasks=join_tasks,
-                    join_similarity=join_similarity,
-                )
-            case _:
-                logger.error("Join method unknown")
+
+        join_images_mode = ji_tasks.get_mode(join_mode)
+        if join_images_mode:
+            results = join_images_mode(
+                copy_list,
+                found_dict,
+                joined_path,
+                verbose=args.get("verbose"),
+                join_tasks=join_tasks,
+                join_similarity=join_similarity,
+                join_sim_method=join_sim_method,
+            )
+        else:
+            logger.error("Join method unknown")
+
+        # match join_mode:
+        #     case "one_core":
+        #         # one_core
+        #         results = ji_tasks.join_images_one_core(
+        #             copy_list,
+        #             found_dict,
+        #             joined_path,
+        #             verbose=args.get("verbose"),
+        #             join_tasks=join_tasks,
+        #             join_similarity=join_similarity,
+        #             join_sim_method=join_sim_method,
+        #         )
+        #     case "future_core":
+        #         # future_core
+        #         results = ji_tasks.join_images_future_core(
+        #             copy_list,
+        #             found_dict,
+        #             joined_path,
+        #             verbose=args.get("verbose"),
+        #             join_tasks=join_tasks,
+        #             join_similarity=join_similarity,
+        #             join_sim_method=join_sim_method,
+        #         )
+        #     case "future_thread":
+        #         # future_thread
+        #         results = ji_tasks.join_images_future_thread(
+        #             copy_list,
+        #             found_dict,
+        #             joined_path,
+        #             verbose=args.get("verbose"),
+        #             join_tasks=join_tasks,
+        #             join_similarity=join_similarity,
+        #             join_sim_method=join_sim_method,
+        #         )
+        #     case "future_core_async":
+        #         # future_thread
+        #         results = await ji_tasks.join_images_future_core_async(
+        #             copy_list,
+        #             found_dict,
+        #             joined_path,
+        #             verbose=args.get("verbose"),
+        #             join_tasks=join_tasks,
+        #             join_similarity=join_similarity,
+        #             join_sim_method=join_sim_method,
+        #         )
+        #     case _:
+        #         logger.error("Join method unknown")
 
         # after join tasks
         if join_similarity:
             # export similarity data for file CSV
-            export_similarity_to_csv(results, csv_path.joinpath("join_similarity.csv"))
+            export_similarity_to_csv(
+                results,
+                csv_path.joinpath("join_similarity.csv"),
+                method=join_sim_method,
+            )
         # filter from results only error_files list
         error_files = list(filter(lambda t: t.get("error") is not None, results))
         if error_files:

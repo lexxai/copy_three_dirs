@@ -117,7 +117,12 @@ def app_arg():
             help="Measure similarity of two images 0..1 and save to CSV",
             action="store_true",
         )
-
+        ap.add_argument(
+            "--join_sim_method",
+            help="You can choose different methods for similarity analyze of images, default 'match'",
+            default="match",
+            choices=["match", "sift", "orb", "fast"],
+        )
     ap.add_argument(
         "--verbose",
         help="verbose output",

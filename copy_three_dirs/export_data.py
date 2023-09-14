@@ -38,11 +38,12 @@ def export_similarity_to_csv(
     data: list,
     filename: Path = Path("similarity_data.csv"),
     settings_path: Path | None = None,
+    method: str = None,
 ) -> bool:
     result = False
     if not data:
         return result
-    fieldnames = ["DATE", "NAME", "SCORE"]
+    fieldnames = ["DATE", "NAME", "SCORE", "METHOD"]
     filename.parent.mkdir(exist_ok=True, parents=True)
     try:
         with open(filename, "a", newline="") as csvfile:
@@ -56,7 +57,7 @@ def export_similarity_to_csv(
                 when = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
                 filename_img = records.get("similarity_img", Path()).name
                 score = records.get("similarity_score")
-                row = [when, filename_img, score]
+                row = [when, filename_img, score, method]
                 writer.writerow(row)
             result = True
     except OSError:

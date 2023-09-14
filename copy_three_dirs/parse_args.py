@@ -117,6 +117,12 @@ def app_arg():
             help="Measure similarity of two images 0..1 and save to CSV",
             action="store_true",
         )
+
+    ap.add_argument(
+        "--verbose",
+        help="verbose output",
+        action="store_true",
+    )
     args = vars(ap.parse_args())
     # print(f"{args=}")
     return args

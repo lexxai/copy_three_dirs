@@ -113,17 +113,19 @@ def pool_join_images_proc(
     logger.info(f"Processes ({max_processes}) of Join files : {len(img1_list)}.")
 
     # loop = asyncio.get_running_loop()
+    args = {
+        "img1_path": None,
+        "img2_path": None,
+        "img_destination_path": output_path,
+        "verbose": verbose,
+        "join_similarity": join_similarity,
+    }
     with ProcessPoolExecutor(max_processes) as pool:
-        futures = [
-            pool.submit(
-                join_images,
-                img1_path,
-                img2_dict.get(img1_path.stem),
-                output_path,
-                verbose,
-            )
-            for img1_path in img1_list
-        ]
+        futures = []
+        for img1_path in img1_list:
+            args["img1_path"] = img1_path
+            args["img2_path"] = img2_dict.get(img1_path.stem)
+            futures.append(pool.submit(join_images, args))
         with logging_redirect_tqdm():
             pbar_future = tqdm(
                 concurrent.futures.as_completed(futures),

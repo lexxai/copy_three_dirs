@@ -8,6 +8,7 @@ import numpy as np
 supported_extensions = (".tif", ".tiff", ".jpg", ".png")
 
 logger: logging
+# print("OpenCV lib")
 
 
 def setup_logger(verbose):

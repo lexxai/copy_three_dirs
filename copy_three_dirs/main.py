@@ -69,34 +69,34 @@ async def pool_join_images_async_proc(
     output_path: Path,
     verbose=False,
     join_tasks=0,
-) -> list[Path]:
+    join_similarity=False,
+) -> list[dict]:
     max_processes = cpu_count() if not join_tasks else join_tasks
     if max_processes > 61:
         max_processes = 61
     logger.info(f"Processes ({max_processes}) of Join files : {len(img1_list)}.")
-
+    args = {
+        "img1_path": None,
+        "img2_path": None,
+        "img_destination_path": output_path,
+        "verbose": verbose,
+        "join_similarity": join_similarity,
+    }
     loop = asyncio.get_running_loop()
     with ProcessPoolExecutor(max_processes) as pool:
-        futures = [
-            loop.run_in_executor(
-                pool,
-                join_images,
-                img1_path,
-                img2_dict.get(img1_path.stem),
-                output_path,
-                verbose,
-            )
-            for img1_path in img1_list
-        ]
+        futures = []
+        for img1_path in img1_list:
+            args["img1_path"] = img1_path
+            args["img2_path"] = img2_dict.get(img1_path.stem)
+            futures.append(loop.run_in_executor(pool, join_images, args))
         with logging_redirect_tqdm():
             pbar = tqdm(
                 asyncio.as_completed(futures),
                 total=len(futures),
                 desc=f"Join to {output_path.name: <9}",
             )
-            error_files: list = [await t for t in pbar]
-    error_files = list(filter(lambda t: t is not None, error_files))
-    return error_files
+            results: list = [await t for t in pbar]
+    return results
 
 
 def pool_join_images_proc(
@@ -106,7 +106,7 @@ def pool_join_images_proc(
     verbose=False,
     join_tasks=0,
     join_similarity=False,
-) -> list[Path]:
+) -> list[dict]:
     max_processes = cpu_count() if not join_tasks else join_tasks
     if max_processes > 61:
         max_processes = 61
@@ -132,9 +132,8 @@ def pool_join_images_proc(
                 total=len(futures),
                 desc=f"Join to {output_path.name: <9}",
             )
-            error_files: list = [future.result() for future in pbar_future]
-    error_files = list(filter(lambda t: t is not None, error_files))
-    return error_files
+            results: list = [future.result() for future in pbar_future]
+    return results
 
 
 def pool_join_images_thread(
@@ -179,7 +178,7 @@ def join_images_one_core(
     verbose: bool = False,
     join_tasks=0,
     join_similarity=False,
-):
+) -> list[dict]:
     logger.info(f"One core process of Join files : {len(copy_list)}.")
     results = []
     args = {
@@ -239,11 +238,10 @@ async def join_images_future_core_async(
     join_tasks=0,
     join_similarity=False,
 ):
-    error_files = await pool_join_images_async_proc(
+    results = await pool_join_images_async_proc(
         copy_list, found_dict, joined_path, verbose, join_tasks, join_similarity
     )
-    if error_files:
-        print(f"\nError join files ({len(error_files)}): {error_files}")
+    return results
 
 
 async def main_async(args):

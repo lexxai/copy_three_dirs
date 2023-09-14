@@ -77,7 +77,7 @@ def join_images(args: dict) -> dict:
 
     image1image2 = np.concatenate((image1, image2), axis=1)
 
-    save_path = img_destination_path.joinpath(img1_path.with_suffix(".tif").name)
+    save_path = img_destination_path.joinpath(img1_path.with_suffix(".jpg").name)
 
     try:
         cv2.imwrite(str(save_path), image1image2)

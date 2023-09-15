@@ -1,4 +1,5 @@
 import logging
+import platform
 from pathlib import Path
 from shutil import copy
 import asyncio
@@ -250,6 +251,8 @@ logger: logging
 def main():
     # only for pyinstall exe, need to use freeze_support
     freeze_support()
+    if platform.system() == "Windows":
+        asyncio.set_event_loop_policy(asyncio.WindowsSelectorEventLoopPolicy())
     global logger
     args = app_arg()
     logging.basicConfig(
